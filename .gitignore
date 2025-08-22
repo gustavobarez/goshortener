@@ -1,0 +1,8 @@
+# Bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Arch
+.tool-versions
