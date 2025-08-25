@@ -6,3 +6,8 @@
 
 # Arch
 .tool-versions
+
+# SAM
+
+.aws-sam
+bootstrap

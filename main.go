@@ -1,6 +1,8 @@
 package main
 
-import "goshortener/config"
+import (
+	"goshortener/config"
+)
 
 var (
 	logger *config.Logger
