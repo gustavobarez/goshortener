@@ -9,11 +9,16 @@ Resources:
       Handler: main
       Runtime: provided.al2023
       Events:
-        Api:
+        CreateUrlApi:
           Type: Api
           Properties:
-            Path: /{proxy+}
-            Method: ANY
+            Path: /
+            Method: post
+        RedirectUrlApi:
+          Type: Api
+          Properties:
+            Path: /{id}
+            Method: get
       Environment:
         Variables:
           DYNAMODB_TABLE: 
@@ -22,7 +27,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: 
               Ref: GoshortenerTable
-
+    Metadata:
+      BuildMethod: go1.x
+      
   GoshortenerTable:
     Type: AWS::DynamoDB::Table
     Properties:
