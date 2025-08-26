@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-func InitializeDynamoDB() (*dynamodb.Client, error) {
+func InitializeDynamoDB(ctx context.Context) (*dynamodb.Client, error) {
 	logger = GetLogger("dynamodb")
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {

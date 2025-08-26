@@ -1,7 +1,9 @@
 package config
 
 import (
+	"context"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
@@ -9,15 +11,17 @@ import (
 var (
 	logger *Logger
 	db     *dynamodb.Client
+	once   sync.Once
 )
 
-func Init() error {
-	var err error
-	_, err = InitializeDynamoDB()
-	if err != nil {
-		return fmt.Errorf("error initializing db: %v", err)
-	}
-	return nil
+func Init() {
+	once.Do(func() {
+		var err error
+		db, err = InitializeDynamoDB(context.TODO())
+		if err != nil {
+			panic(fmt.Errorf("error initializing db: %v", err))
+		}
+	})
 }
 
 func GetDynamoDB() *dynamodb.Client {
