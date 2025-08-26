@@ -16,10 +16,10 @@ import (
 // @Tags         URLs
 // @Accept       json
 // @Produce      json
-// @Param        request body handler.CreateUrlRequest true "Request body for creating a new short URL"
-// @Success      201 {object} handler.CreateUrlResponse
-// @Failure      400 {object} handler.ErrorResponse
-// @Failure      500 {object} handler.ErrorResponse
+// @Param        request body CreateURLRequest true "Request body for creating a new short URL"
+// @Success      201 {object} CreateUrlResponse
+// @Failure      400 {object} ErrorResponse
+// @Failure      500 {object} ErrorResponse
 // @Router       / [post]
 func CreateUrlHandler(writer http.ResponseWriter, router *http.Request) {
 	if router.Method != http.MethodPost {

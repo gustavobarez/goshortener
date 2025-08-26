@@ -1,4 +1,87 @@
+definitions:
+  handler.CreateURLRequest:
+    properties:
+      url:
+        type: string
+    type: object
+  handler.CreateUrlResponse:
+    properties:
+      data:
+        $ref: '#/definitions/schemas.URL'
+      message:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      errorCode:
+        type: string
+      message:
+        type: string
+    type: object
+  schemas.URL:
+    properties:
+      id:
+        type: string
+      originalURL:
+        type: string
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new short URL from a provided long URL.
+      parameters:
+      - description: Request body for creating a new short URL
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateURLRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.CreateUrlResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Create Short URL
+      tags:
+      - URLs
+  /{id}:
+    get:
+      description: Finds a short URL by its ID and redirects the client to the original
+        long URL.
+      parameters:
+      - description: The ID of the short URL
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "301":
+          description: Redirects to the original URL
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Redirect to Long URL
+      tags:
+      - URLs
 swagger: "2.0"
