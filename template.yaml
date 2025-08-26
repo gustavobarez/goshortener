@@ -19,17 +19,32 @@ Resources:
           Properties:
             Path: /{id}
             Method: get
+        SwaggerUIApi:
+          Type: Api
+          Properties:
+            Path: /swagger
+            Method: get
+        SwaggerAssetsApi:
+          Type: Api
+          Properties:
+            Path: /swagger/{proxy+}
+            Method: get
+        SwaggerDocsApi:
+          Type: Api
+          Properties:
+            Path: /swagger/doc.json
+            Method: get
       Environment:
         Variables:
-          DYNAMODB_TABLE: 
+          DYNAMODB_TABLE:
             Ref: GoshortenerTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: 
+            TableName:
               Ref: GoshortenerTable
     Metadata:
       BuildMethod: go1.x
-      
+
   GoshortenerTable:
     Type: AWS::DynamoDB::Table
     Properties:
