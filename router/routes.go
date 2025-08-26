@@ -11,8 +11,8 @@ func initializeRoutes(mux *http.ServeMux) {
 			handler.CreateUrlHandler(writer, router)
 			return
 		}
-		if router.Method == http.MethodGet {
-			http.Error(writer, "ERROR", http.StatusNotImplemented)
+		if router.Method == http.MethodGet && router.URL.Path != "/" {
+			handler.ShowUrlHandler(writer, router)
 			return
 		}
 		http.NotFound(writer, router)

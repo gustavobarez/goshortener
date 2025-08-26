@@ -4,7 +4,6 @@ import (
 	"context"
 	"goshortener/config"
 	"goshortener/schemas"
-
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
@@ -12,6 +11,7 @@ import (
 var (
 	logger *config.Logger
 	db     *dynamodb.Client
+	tableName = "go-shortener-stack-GoshortenerTable-15NXOTCN9DYB7"
 )
 
 func Save(ctx context.Context, url schemas.URL) error {
@@ -23,7 +23,6 @@ func Save(ctx context.Context, url schemas.URL) error {
 		return err
 	}
 
-	tableName := "go-shortener-stack-GoshortenerTable-15NXOTCN9DYB7"
 	_, err = db.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: &tableName,
 		Item:      av,
@@ -33,4 +32,32 @@ func Save(ctx context.Context, url schemas.URL) error {
 		return err
 	}
 	return nil
+}
+
+func FindById(ctx context.Context, id string) (schemas.URL, error) {
+	logger = config.GetLogger("repository")
+	db = config.GetDynamoDB()
+	var urlItem schemas.URL
+	key, err := attributevalue.MarshalMap(map[string]string{"id": id})
+	if err != nil {
+		logger.Errorf("failed to marshal key: %v", err)
+		return urlItem, err
+	}
+
+	result, err := db.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: &tableName,
+		Key: key,
+	})
+
+	if result.Item == nil {
+		logger.Errorf("failed to find item: %v", err)
+		return urlItem, err 
+	}
+	
+	err = attributevalue.UnmarshalMap(result.Item, &urlItem)
+	if err != nil {
+		logger.Errorf("failed to unmarshal item: %v", err)
+		return urlItem, err
+	}
+	return urlItem, nil
 }
