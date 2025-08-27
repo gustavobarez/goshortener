@@ -3,8 +3,11 @@ package config
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
@@ -25,6 +28,29 @@ func Init() {
 }
 
 func GetDynamoDB() *dynamodb.Client {
+	if db != nil {
+		return db
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("us-east-1"),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				if service == dynamodb.ServiceID {
+					return aws.Endpoint{
+						URL:           "http://localhost:8000",
+						SigningRegion: "us-east-1",
+					}, nil
+				}
+				return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+			}),
+		),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db = dynamodb.NewFromConfig(cfg)
 	return db
 }
 
