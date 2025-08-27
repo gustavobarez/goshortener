@@ -17,17 +17,6 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local:latest
-        ports:
-          - 8000:8000
-        options: >-
-          --health-cmd "curl -f http://localhost:8000 || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,6 +39,31 @@ jobs:
       - name: Install dependencies
         run: go mod download
         
+      - name: Start DynamoDB Local
+        run: |
+          docker run -d --name dynamodb-local \
+            -p 8000:8000 \
+            amazon/dynamodb-local:latest \
+            -jar DynamoDBLocal.jar -inMemory -port 8000
+          sleep 10
+          
+      - name: Wait for DynamoDB to be ready
+        run: |
+          echo "Waiting for DynamoDB Local to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000 > /dev/null 2>&1; then
+              echo "DynamoDB Local is ready!"
+              break
+            elif [ $i -eq 30 ]; then
+              echo "DynamoDB Local failed to start within 60 seconds"
+              docker logs dynamodb-local
+              exit 1
+            else
+              echo "Attempt $i: DynamoDB not ready yet, waiting..."
+              sleep 2
+            fi
+          done
+        
       - name: Run go fmt
         run: |
           if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
@@ -62,7 +76,15 @@ jobs:
         run: go vet ./...
         
       - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+        run: |
+          TEST_PACKAGES=$(find . -name "*_test.go" -not -path "./vendor/*" | xargs -I {} dirname {} | sort | uniq | tr '\n' ' ')
+          if [ -n "$TEST_PACKAGES" ]; then
+            echo "Testing packages: $TEST_PACKAGES"
+            go test -v -race -coverprofile=coverage.out -coverpkg=./... $TEST_PACKAGES
+          else
+            echo "No test packages found"
+            exit 1
+          fi
         env:
           AWS_ENDPOINT: http://localhost:8000
           AWS_ACCESS_KEY_ID: fake
@@ -70,13 +92,9 @@ jobs:
           AWS_REGION: us-east-1
           DYNAMODB_TABLE: urls-table-test
           
-      - name: Generate coverage report
-        run: go tool cover -html=coverage.out -o coverage.html
-        
-      - name: Upload coverage to Codecov (opcional)
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.out
+      - name: Stop DynamoDB Local
+        if: always()
+        run: docker stop dynamodb-local && docker rm dynamodb-local
           
   deploy:
     name: Deploy to AWS
@@ -111,5 +129,4 @@ jobs:
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --stack-name go-shortener-stack \
-            --capabilities CAPABILITY_IAM \
-            --region ${{ secrets.AWS_REGION }}
+            --capabilities CAPABILITY_IAM
