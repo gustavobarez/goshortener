@@ -21,16 +21,16 @@ import (
 // @Failure      400 {object} ErrorResponse
 // @Failure      500 {object} ErrorResponse
 // @Router       / [post]
-func CreateUrlHandler(writer http.ResponseWriter, router *http.Request) {
-	if router.Method != http.MethodPost {
+func CreateUrlHandler(writer http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
 		http.Error(writer, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	ctx := router.Context()
+	ctx := req.Context()
 
 	request := CreateURLRequest{}
-	if err := json.NewDecoder(router.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
 		http.Error(writer, "invalid request body", http.StatusBadRequest)
 		return
 	}
