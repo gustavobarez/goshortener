@@ -4,15 +4,25 @@ import (
 	"context"
 	"goshortener/config"
 	"goshortener/schemas"
+	"os"
+
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 var (
-	logger *config.Logger
-	db     *dynamodb.Client
-	tableName = "go-shortener-stack-GoshortenerTable-15NXOTCN9DYB7"
+	logger    *config.Logger
+	db        *dynamodb.Client
+	tableName = getTableName()
 )
+
+func getTableName() string {
+	name := os.Getenv("DYNAMODB_TABLE")
+	if name == "" {
+		return "urls-table-test"
+	}
+	return name
+}
 
 func Save(ctx context.Context, url schemas.URL) error {
 	logger = config.GetLogger("repository")
@@ -46,14 +56,14 @@ func FindById(ctx context.Context, id string) (schemas.URL, error) {
 
 	result, err := db.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: &tableName,
-		Key: key,
+		Key:       key,
 	})
 
 	if result.Item == nil {
 		logger.Errorf("failed to find item: %v", err)
-		return urlItem, err 
+		return urlItem, err
 	}
-	
+
 	err = attributevalue.UnmarshalMap(result.Item, &urlItem)
 	if err != nil {
 		logger.Errorf("failed to unmarshal item: %v", err)
