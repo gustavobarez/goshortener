@@ -26,8 +26,26 @@ To use this project, you need to follow these steps:
 
 1. Clone the repository: `git clone https://github.com/gustavobarez/goshortener.git`
 2. Install the dependencies: `go mod download`
-3. Build the application: `go build`
-4. Run the application: `./main`
+3. Configure environment variables:
+
+  - Create an `env.json` file in the root directory with your DynamoDB table configuration:
+```json
+{
+  "GoshortenerFunction": {
+    "DYNAMODB_TABLE": "table-name"
+  }
+}
+```
+4. For local development (optional):
+
+  - Start DynamoDB Local
+`docker-compose up -d dynamodb-local`
+
+   - Check if it's running
+`docker-compose ps`
+
+5. Run the application:
+`make run-with-docs`
 
 ## Makefile Commands
 
